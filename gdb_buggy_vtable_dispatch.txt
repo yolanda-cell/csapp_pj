@@ -1,0 +1,27 @@
+(base) yolanda@yolansasus:~/code/schoolwork/final_pj$ gdb buggy_vtable_dispatch
+
+...
+
+(gdb) b 15
+Breakpoint 1 at 0x1195: file buggy_vtable_dispatch.c, line 16.
+(gdb) r
+
+...
+
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, shape_area (s=0x5555555592a0) at buggy_vtable_dispatch.c:16
+16          return s->vt->area(s);   // crash if vt is NULL/garbage
+(gdb) print s->vt
+$1 = (const ShapeVTable *) 0x0
+(gdb) x/gx s
+0x5555555592a0: 0x0000000000000000
+(gdb) x/gx s->vt
+0x0:    Cannot access memory at address 0x0
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+shape_area (s=0x5555555592a0) at buggy_vtable_dispatch.c:16
+16          return s->vt->area(s);   // crash if vt is NULL/garbage
+(gdb)

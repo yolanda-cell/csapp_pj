@@ -1,0 +1,33 @@
+
+(base) yolanda@yolansasus:~/code/schoolwork/final_pj$ gdb ./buggy_tagged_union
+
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+OWNED_STR: hello
+OWNED_STR: hello
+
+Breakpoint 1, destroy (v=0x7fffffffd7c0) at buggy_tagged_union.c:33
+33          if (!v) return;
+(gdb) x/gx v
+0x7fffffffd7c0: 0x0000000000000001
+(gdb) print *v
+$1 = {tag = V_OWNED_STR, u = {i = 93824992252576, s = 0x5555555592a0 "hello"}}
+(gdb) x/gx v->u.s
+0x5555555592a0: 0x0000006f6c6c6568
+(gdb) c
+Continuing.
+
+Breakpoint 1, destroy (v=0x7fffffffd7d0) at buggy_tagged_union.c:33
+33          if (!v) return;
+(gdb) x/gx v
+0x7fffffffd7d0: 0x0000000000000001
+(gdb) print *v
+$2 = {tag = V_OWNED_STR, u = {i = 93824992252576, s = 0x5555555592a0 "YUUU\005"}}
+(gdb) x/gx v->u.s
+0x5555555592a0: 0x0000000555555559
+(gdb) c
+Continuing.
+free(): double free detected in tcache 2
+
+Program received signal SIGABRT, Aborted.
+__pthread_kill_implementation (no_tid=0, signo=6, threadid=<optimized out>) at ./nptl/pthread_kill.c:44
+warning: 44     ./nptl/pthread_kill.c: No such file or directory
