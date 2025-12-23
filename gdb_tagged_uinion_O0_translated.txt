@@ -1,0 +1,83 @@
+# ------------------------------------------------------------
+# long value_score(const Value *v)
+# SysV AMD64 ABI: v (pointer) is passed in %rdi
+#
+# Value layout (typical on x86-64):
+#   offset 0: int tag            (4 bytes)
+#   offset 4: padding            (4 bytes)  # to align union to 8
+#   offset 8: union u            (8 bytes)  # holds long / double / char*
+#
+# enum tags assumed:
+#   V_INT       = 0
+#   V_DOUBLE    = 1
+#   V_OWNED_STR = 2
+#
+# Switch behavior:
+#   case 0: return v->u.i + 1
+#   case 1: return (long)v->u.d + 2
+#   case 2: return strlen(v->u.s) + 3
+#   default: abort()
+# ------------------------------------------------------------
+
+value_score:
+    endbr64                         # CET/IBT landing pad (not logical code)
+
+    pushq   %rbp                    # prologue: save old frame pointer
+    movq    %rsp, %rbp              # establish new frame pointer
+    subq    $0x10, %rsp             # allocate 16 bytes stack space
+
+    movq    %rdi, -0x8(%rbp)        # store argument v at [rbp-8]
+
+    movq    -0x8(%rbp), %rax        # rax = v
+    movl    (%rax), %eax            # eax = v->tag  (32-bit load from offset 0)
+
+    # ---- dispatch on tag (switch) ----
+    cmpl    $0x2, %eax              # compare tag with 2 (V_OWNED_STR)
+    je      .Lcase_owned_str        # if tag == 2 -> case V_OWNED_STR
+
+    cmpl    $0x2, %eax              # compare tag with 2 again
+    ja      .Ldefault_abort         # if tag > 2 -> default (abort)
+
+    testl   %eax, %eax              # set ZF if tag == 0
+    je      .Lcase_int              # if tag == 0 -> case V_INT
+
+    cmpl    $0x1, %eax              # compare tag with 1 (V_DOUBLE)
+    je      .Lcase_double           # if tag == 1 -> case V_DOUBLE
+
+    jmp     .Ldefault_abort         # otherwise -> default (abort)
+
+.Lcase_int:
+    # case V_INT (tag == 0):
+    #   return v->u.i + 1;
+    movq    -0x8(%rbp), %rax        # rax = v
+    movq    0x8(%rax), %rax         # rax = v->u.i (8-byte load from offset 8)
+    addq    $0x1, %rax              # rax += 1
+    jmp     .Lret                   # jump to epilogue/return
+
+.Lcase_double:
+    # case V_DOUBLE (tag == 1):
+    #   return (long)(v->u.d) + 2;
+    movq    -0x8(%rbp), %rax        # rax = v
+    movsd   0x8(%rax), %xmm0        # xmm0 = v->u.d (load double from offset 8)
+    cvttsd2si %xmm0, %rax           # rax = (long)trunc(xmm0) (double -> int64)
+    addq    $0x2, %rax              # rax += 2
+    jmp     .Lret                   # jump to epilogue/return
+
+.Lcase_owned_str:
+    # case V_OWNED_STR (tag == 2):
+    #   return (long)strlen(v->u.s) + 3;
+    movq    -0x8(%rbp), %rax        # rax = v
+    movq    0x8(%rax), %rax         # rax = v->u.s (char*) from offset 8
+    movq    %rax, %rdi              # rdi = v->u.s (1st arg to strlen)
+    call    strlen@plt              # rax = strlen(v->u.s)
+    addq    $0x3, %rax              # rax += 3
+    jmp     .Lret                   # jump to epilogue/return
+
+.Ldefault_abort:
+    # default:
+    #   abort();
+    call    abort@plt               # does not return in normal execution
+
+.Lret:
+    leave                           # epilogue: mov %rbp,%rsp ; pop %rbp
+    ret                             # return value already in %rax

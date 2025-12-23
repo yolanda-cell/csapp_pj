@@ -1,0 +1,79 @@
+(base) yolanda@yolansasus:~/code/schoolwork/final_pj$ gdb ./tagged_union_O0
+...
+(gdb) b 94
+Breakpoint 1 at 0x14af: file tagged_union.c, line 96.
+(gdb) r
+...
+
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+INT: 10
+DOUBLE: 3.140000
+OWNED_STR: hello
+
+Breakpoint 1, value_score (v=0x7fffffffd7a0) at tagged_union.c:96
+96          switch (v->tag) {
+(gdb) disas value_score
+Dump of assembler code for function value_score:
+
+   0x000055555555549f <+0>:     endbr64
+   0x00005555555554a3 <+4>:     push   %rbp
+   0x00005555555554a4 <+5>:     mov    %rsp,%rbp
+   0x00005555555554a7 <+8>:     sub    $0x10,%rsp
+   0x00005555555554ab <+12>:    mov    %rdi,-0x8(%rbp)
+=> 0x00005555555554af <+16>:    mov    -0x8(%rbp),%rax 
+   0x00005555555554b3 <+20>:    mov    (%rax),%eax	
+   0x00005555555554b5 <+22>:    cmp    $0x2,%eax
+   0x00005555555554b8 <+25>:    je     0x5555555554ec <value_score+77>
+   0x00005555555554ba <+27>:    cmp    $0x2,%eax
+   0x00005555555554bd <+30>:    ja     0x555555555502 <value_score+99>
+   0x00005555555554bf <+32>:    test   %eax,%eax
+   0x00005555555554c1 <+34>:    je     0x5555555554ca <value_score+43>
+   0x00005555555554c3 <+36>:    cmp    $0x1,%eax
+   0x00005555555554c6 <+39>:    je     0x5555555554d8 <value_score+57>
+   0x00005555555554c8 <+41>:    jmp    0x555555555502 <value_score+99>
+   0x00005555555554ca <+43>:    mov    -0x8(%rbp),%rax
+   0x00005555555554ce <+47>:    mov    0x8(%rax),%rax
+   0x00005555555554d2 <+51>:    add    $0x1,%rax
+   0x00005555555554d6 <+55>:    jmp    0x555555555507 <value_score+104>
+   0x00005555555554d8 <+57>:    mov    -0x8(%rbp),%rax
+   0x00005555555554dc <+61>:    movsd  0x8(%rax),%xmm0
+   0x00005555555554e1 <+66>:    cvttsd2si %xmm0,%rax
+   0x00005555555554e6 <+71>:    add    $0x2,%rax
+   0x00005555555554ea <+75>:    jmp    0x555555555507 <value_score+104>
+   0x00005555555554ec <+77>:    mov    -0x8(%rbp),%rax
+   0x00005555555554f0 <+81>:    mov    0x8(%rax),%rax
+   0x00005555555554f4 <+85>:    mov    %rax,%rdi
+   0x00005555555554f7 <+88>:    call   0x5555555550d0 <strlen@plt>
+   0x00005555555554fc <+93>:    add    $0x3,%rax
+   0x0000555555555500 <+97>:    jmp    0x555555555507 <value_score+104>
+   0x0000555555555502 <+99>:    call   0x5555555550c0 <abort@plt>
+   0x0000555555555507 <+104>:   leave
+   0x0000555555555508 <+105>:   ret
+End of assembler dump.
+
+(gdb) x/2gx v
+0x7fffffffd7a0: 0x0000000000000000      0x000000000000000a
+(gdb) info r rdi rax eflags
+rdi            0x7fffffffd7a0      140737488344992
+rax            0x7fffffffd7a0      140737488344992
+eflags         0x202               [ IF ]
+(gdb) x/i $rip
+=> 0x5555555554af <value_score+16>:     mov    -0x8(%rbp),%rax
+(gdb) si
+0x00005555555554b3      96          switch (v->tag) {
+(gdb) si
+96          switch (v->tag) {
+(gdb) info r eax
+eax            0x0                 0
+(gdb) x/i $rip
+=> 0x5555555554b5 <value_score+22>:     cmp    $0x2,%eax
+(gdb) info r eflags
+eflags         0x202               [ IF ]
+(gdb) si
+0x00005555555554b8      96          switch (v->tag) {
+(gdb) info r eflags
+eflags         0x293               [ CF AF SF IF ]
+(gdb) si
+0x00005555555554ba      96          switch (v->tag) {
+(gdb) x/i $rip
+=> 0x5555555554ba <value_score+27>:     cmp    $0x2,%eax

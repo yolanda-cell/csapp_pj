@@ -1,3 +1,8 @@
+/*
+build using:
+gcc -g -O0 -fno-omit-frame-pointer buggy_vtable_dispatch.c -o buggy_vtable_dispatch
+*/
+
 (base) yolanda@yolansasus:~/code/schoolwork/final_pj$ gdb buggy_vtable_dispatch
 
 ...

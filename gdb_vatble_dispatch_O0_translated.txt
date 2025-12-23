@@ -1,0 +1,74 @@
+shape_area:
+    push   %rbp
+    mov    %rsp,%rbp
+    sub    $0x10,%rsp
+
+    mov    %rdi,-0x8(%rbp)
+    # save argument s on stack
+    # rdi holds first argument (SysV ABI)
+
+    mov    -0x8(%rbp),%rax
+    # rax = s (reload object pointer)
+
+    mov    (%rax),%rax
+    # rax = s->vt
+    # load vtable pointer from object
+    # object layout: [0] = vt
+
+    mov    (%rax),%rdx
+    # rdx = s->vt->area
+    # load function pointer from vtable slot 0
+
+    mov    -0x8(%rbp),%rax
+    # rax = s again
+
+    mov    %rax,%rdi
+    # prepare argument for call: rdi = s
+
+    call   *%rdx
+    # indirect call via function pointer
+    # dynamic dispatch happens here
+
+    leave
+    ret
+
+circle_area:
+    endbr64
+    # CET / control-flow enforcement (not relevant to logic)
+
+    push   %rbp
+    mov    %rsp,%rbp
+
+    mov    %rdi,-0x18(%rbp)
+    # save argument s on stack
+
+    mov    -0x18(%rbp),%rax
+    mov    %rax,-0x8(%rbp)
+    # local variable c = (Circle *)s
+    # note: cast disappears at runtime
+
+    mov    -0x8(%rbp),%rax
+    # rax = c (same address as s)
+
+    movsd  0x8(%rax),%xmm1
+    # xmm1 = c->r
+    # load double at offset +8
+    # layout: [0]=vt, [8]=r
+
+    movsd  0xe36(%rip),%xmm0
+    # xmm0 = constant 3.14159
+
+    mulsd  %xmm0,%xmm1
+    # xmm1 = pi * r
+
+    mov    -0x8(%rbp),%rax
+    # rax = c again
+
+    movsd  0x8(%rax),%xmm0
+    # xmm0 = r
+
+    mulsd  %xmm1,%xmm0
+    # xmm0 = pi * r * r
+
+    pop    %rbp
+    ret

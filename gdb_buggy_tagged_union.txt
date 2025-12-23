@@ -1,3 +1,7 @@
+/*
+build using:
+gcc -g -O0 -fno-omit-frame-pointer buggy_tagged_union.c -o buggy_tagged_union
+*/
 
 (base) yolanda@yolansasus:~/code/schoolwork/final_pj$ gdb ./buggy_tagged_union
 

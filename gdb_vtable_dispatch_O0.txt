@@ -1,0 +1,96 @@
+(base) yolanda@yolansasus:~/code/schoolwork/final_pj$ gdb ./vtable_dispatch_O0
+...
+Reading symbols from ./vtable_dispatch_O0...
+(gdb) b 92
+Breakpoint 1 at 0x1362: file vtable_dispatch.c, line 92.
+(gdb) b shape_area
+Breakpoint 2 at 0x1195: file vtable_dispatch.c, line 24.
+(gdb) b circle_area
+Breakpoint 3 at 0x11d9: file vtable_dispatch.c, line 38.
+(gdb) r
+Starting program: /home/yolanda/code/schoolwork/final_pj/vtable_dispatch_O0
+
+...
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main () at vtable_dispatch.c:92
+92          printf("area(s1)=%f\n", shape_area(s1));
+(gdb) p s1
+$1 = (Shape *) 0x5555555592a0
+(gdb) p *s1
+$2 = {vt = 0x555555557d90 <circle_vt>}
+(gdb) p *(Circle*)s1
+$3 = {base = {vt = 0x555555557d90 <circle_vt>}, r = 2}
+(gdb) p s1->vt
+$4 = (const ShapeVTable *) 0x555555557d90 <circle_vt>
+(gdb) p &((Circle*)s1)->r
+$5 = (double *) 0x5555555592a8
+(gdb) x /2gx s1
+0x5555555592a0: 0x0000555555557d90      0x4000000000000000
+(gdb) x/gx &((Circle*)s1)->r
+0x5555555592a8: 0x4000000000000000
+(gdb) x/gf &((Circle*)s1)->r
+0x5555555592a8: 2
+(gdb) c
+Continuing.
+
+Breakpoint 2, shape_area (s=0x5555555592a0) at vtable_dispatch.c:24
+24          return s->vt->area(s);
+(gdb) disas
+Dump of assembler code for function shape_area:
+   0x0000555555555189 <+0>:     push   %rbp
+   0x000055555555518a <+1>:     mov    %rsp,%rbp
+   0x000055555555518d <+4>:     sub    $0x10,%rsp
+   0x0000555555555191 <+8>:     mov    %rdi,-0x8(%rbp)
+=> 0x0000555555555195 <+12>:    mov    -0x8(%rbp),%rax
+   0x0000555555555199 <+16>:    mov    (%rax),%rax
+   0x000055555555519c <+19>:    mov    (%rax),%rdx
+   0x000055555555519f <+22>:    mov    -0x8(%rbp),%rax
+   0x00005555555551a3 <+26>:    mov    %rax,%rdi
+   0x00005555555551a6 <+29>:    call   *%rdx
+   0x00005555555551a8 <+31>:    leave
+   0x00005555555551a9 <+32>:    ret
+End of assembler dump.
+(gdb) si
+0x0000555555555199      24          return s->vt->area(s);
+(gdb) x/i $rip
+=> 0x555555555199 <shape_area+16>:      mov    (%rax),%rax
+(gdb) info r rdi rax
+rdi            0x5555555592a0      93824992252576
+rax            0x5555555592a0      93824992252576
+(gdb) info symbol $rax
+No symbol matches $rax.
+(gdb) info symbol rax
+No symbol "rax" in current context.
+(gdb) si
+24          return s->vt->area(s);
+(gdb) x/i rip
+No symbol "rip" in current context.
+(gdb) x/i $rip
+=> 0x55555555519c <shape_area+19>:      mov    (%rax),%rdx
+(gdb) info symbol $rax
+circle_vt in section .data.rel.ro of /home/yolanda/code/schoolwork/final_pj/vtable_dispatch_O0
+(gdb) c
+Continuing.
+
+Breakpoint 3, circle_area (s=0x5555555592a0) at vtable_dispatch.c:38
+38          const Circle *c = (const Circle *)s;
+(gdb) disas
+Dump of assembler code for function circle_area:
+   0x00005555555551cd <+0>:     endbr64
+   0x00005555555551d1 <+4>:     push   %rbp
+   0x00005555555551d2 <+5>:     mov    %rsp,%rbp
+   0x00005555555551d5 <+8>:     mov    %rdi,-0x18(%rbp)
+=> 0x00005555555551d9 <+12>:    mov    -0x18(%rbp),%rax
+   0x00005555555551dd <+16>:    mov    %rax,-0x8(%rbp)
+   0x00005555555551e1 <+20>:    mov    -0x8(%rbp),%rax
+   0x00005555555551e5 <+24>:    movsd  0x8(%rax),%xmm1
+   0x00005555555551ea <+29>:    movsd  0xe36(%rip),%xmm0        # 0x555555556028
+   0x00005555555551f2 <+37>:    mulsd  %xmm0,%xmm1
+   0x00005555555551f6 <+41>:    mov    -0x8(%rbp),%rax
+   0x00005555555551fa <+45>:    movsd  0x8(%rax),%xmm0
+   0x00005555555551ff <+50>:    mulsd  %xmm1,%xmm0
+   0x0000555555555203 <+54>:    pop    %rbp
+   0x0000555555555204 <+55>:    ret
+End of assembler dump.
+(gdb)
